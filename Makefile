@@ -29,7 +29,6 @@ CFLAGS += -Wlogical-op  # Warn if logical operations is used where bitwise might
 
 INC = -iquote include/
 INC += -iquote src/inc/
-INC_TEST = -iquote test/inc/
 ODIR = obj
 SDIR = src
 TDIR = test
@@ -37,19 +36,13 @@ TDIR = test
 # Object files to compile
 _OBJS = example.o
 
-#_OBJS_TEST = test_cpu.o
-
 _OBJS_MAIN = main.o
-_OBJS_MAIN_TEST = test_main.o
 
 OBJS_DEBUG = $(patsubst %,$(ODIR)/debug/%,$(_OBJS))
 OBJS_DEBUG_MAIN = $(patsubst %,$(ODIR)/debug/%,$(_OBJS_MAIN))
 
 OBJS_RELEASE = $(addprefix $(ODIR)/release/,$(_OBJS))
 OBJS_RELEASE_MAIN = $(addprefix $(ODIR)/release/,$(_OBJS_MAIN))
-
-#OBJS_TEST = $(addprefix $(ODIR)/test/,$(_OBJS_TEST))
-OBJS_TEST = $(addprefix $(ODIR)/test/,$(_OBJS_MAIN_TEST))
 
 all : release
 
@@ -75,19 +68,8 @@ debug_obj : init init_debug $(OBJS_DEBUG) init_bin_debug
 debug_main : $(OBJS_DEBUG_MAIN)
 	@$(CC) -g $(OBJS_DEBUG) $(OBJS_DEBUG_MAIN) -o bin/debug/$(EX_NAME)
 
-test: debug_obj init_test $(OBJS_TEST) init_bin_test
-	@echo
-	@echo \******************************
-	@echo \* Start of unit testing
-	@echo \******************************
-	@echo
-	@$(CC) $(OBJS_TEST) $(OBJS_DEBUG) -lcmocka -o bin/test/$(EX_NAME)
-	@./bin/test/$(EX_NAME)
-
-# Define a pattern rule that compiles every .c file into a .o file in its destination
-#$(ODIR)/%.o: $(SDIR)/%.c
-#	@echo this is not being run?
-#	@$(CC) -c $(CFLAGS) $(INC) $(CPPFLAGS) $< -o $@
+include $(TDIR)/test.mk
+test: test_run
 
 # Define a pattern rule that compiles every .c file into a .o file in its
 # destination in the debug folder
@@ -100,12 +82,6 @@ $(ODIR)/debug/%.o : $(SDIR)/%.c
 $(ODIR)/release/%.o : CPPFLAGS += -DRELEASE
 $(ODIR)/release/%.o : $(SDIR)/%.c
 	$(CC) -c $(CFLAGS) $(INC) $(CPPFLAGS) $< -o $@
-
-# Define a pattern rule that compiles every .c file into a .o file in its
-# destination in the release folder
-$(ODIR)/test/%.o : CPPFLAGS += -DDEBUG
-$(ODIR)/test/%.o : $(TDIR)/%.c
-	$(CC) -c $(CFLAGS) $(INC) $(INC_TEST) $(CPPFLAGS) $< -o $@
 
 .PHONY: clean
 
@@ -137,16 +113,6 @@ init_bin_debug : init_bin
 init_bin :
 	@if [ ! -d bin ]; then \
 		mkdir bin; \
-	fi
-
-init_test :
-	@if [ ! -d "$(ODIR)/test" ]; then \
-		mkdir $(ODIR)/test; \
-	fi
-
-init_bin_test : init_bin
-	@if [ ! -d bin/test ]; then \
-		mkdir bin/test; \
 	fi
 
 help :
