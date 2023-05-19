@@ -29,7 +29,8 @@ CFLAGS += -Wlogical-op  # Warn if logical operations is used where bitwise might
 
 INC = -iquote include/
 INC += -iquote src/inc/
-ODIR = obj
+BUILD_DIR = build
+ODIR = $(BUILD_DIR)/obj
 SDIR = src
 TDIR = test
 
@@ -46,7 +47,7 @@ OBJS_RELEASE_MAIN = $(addprefix $(ODIR)/release/,$(_OBJS_MAIN))
 
 all : release
 
-release : release_obj release_bin
+release : release_obj release_bin release_lib
 	@echo
 	@echo \******************************
 	@echo \* Finished target $@
@@ -57,7 +58,10 @@ release_obj : init init_release $(OBJS_RELEASE) init_bin_release
 release_bin : $(OBJS_RELEASE_MAIN)
 	@$(CC) $(OBJS_RELEASE) $(OBJS_RELEASE_MAIN) -o bin/release/$(EX_NAME)
 
-debug : debug_obj debug_main
+release_lib : 
+	@$(AR) rcs ./lib/release/lib$(EX_NAME).a $(OBJS_RELEASE)
+
+debug : debug_obj debug_main debug_lib
 	@echo
 	@echo \******************************
 	@echo \* Finished target $@
@@ -67,6 +71,10 @@ debug_obj : init init_debug $(OBJS_DEBUG) init_bin_debug
 
 debug_main : $(OBJS_DEBUG_MAIN)
 	@$(CC) -g $(OBJS_DEBUG) $(OBJS_DEBUG_MAIN) -o bin/debug/$(EX_NAME)
+
+debug_lib :
+	@$(AR) rcs ./lib/debug/lib$(EX_NAME).a $(OBJS_DEBUG)
+	@echo Build library ./lib/debug/lib$(EX_NAME).a
 
 include $(TDIR)/test.mk
 test: test_run
@@ -86,16 +94,20 @@ $(ODIR)/release/%.o : $(SDIR)/%.c
 .PHONY: clean
 
 init :
+	@if [ ! -d "$(BUILD_DIR)" ]; then \
+		mkdir $(BUILD_DIR); \
+	fi
+
 	@if [ ! -d "$(ODIR)" ]; then \
 		mkdir $(ODIR); \
 	fi
 
-init_debug : init_bin
+init_debug : init_bin init_lib init_lib_debug
 	@if [ ! -d "$(ODIR)/debug" ]; then \
 		mkdir $(ODIR)/debug; \
 	fi
 
-init_release :
+init_release : init_bin init_lib init_lib_release
 	@if [ ! -d "$(ODIR)/release" ]; then \
 		mkdir $(ODIR)/release; \
 	fi
@@ -115,6 +127,21 @@ init_bin :
 		mkdir bin; \
 	fi
 
+init_lib :
+	@if [ ! -d lib ]; then \
+		mkdir lib; \
+	fi
+
+init_lib_release :
+	@if [ ! -d lib/release ]; then \
+		mkdir lib/release; \
+	fi
+
+init_lib_debug :
+	@if [ ! -d lib/debug ]; then \
+		mkdir lib/debug; \
+	fi
+
 help :
 	@echo Usage make [options]
 	@echo Options:
@@ -125,6 +152,7 @@ help :
 
 clean :
 	@echo Cleaning this project
-	rm -rf ./$(ODIR)
+	rm -rf ./$(BUILD_DIR)
 	rm -rf ./bin
+	rm -rf ./lib
 
