@@ -1,3 +1,5 @@
+[![Makefile release](https://github.com/ricardobtez/c_starter_template/actions/workflows/makefile_release.yml/badge.svg?branch=main)](https://github.com/ricardobtez/c_starter_template/actions/workflows/makefile_release.yml)
+[![Makefile debug](https://github.com/ricardobtez/c_starter_template/actions/workflows/makefile_debug.yml/badge.svg?branch=main)](https://github.com/ricardobtez/c_starter_template/actions/workflows/makefile_debug.yml)
 
 # c_starter_template
 
