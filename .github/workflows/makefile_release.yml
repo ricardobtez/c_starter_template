@@ -1,0 +1,25 @@
+name: Makefile release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: mstksg/get-package@v1
+      with:
+        apt-get: pkg-config libcmocka-dev
+
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: make release
+
+    - name: Run Tests
+      run: make test
